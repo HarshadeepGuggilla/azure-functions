@@ -42,7 +42,12 @@ def http_trigger(req: func.HttpRequest,  inputBlob: func.InputStream) -> func.Ht
 def get_rolling_five_days(inputBlob, country_code):
     try:
         # Read CSV into a Pandas DataFrame, parse 'dateRep' column in the correct date format
-        df = pd.read_csv(inputBlob, parse_dates=['dateRep'], dayfirst=True, infer_datetime_format=True)
+        df = pd.read_csv(inputBlob, parse_dates=['dateRep'], dayfirst=True)
+        
+        if df.empty:
+            return func.HttpResponse("No data found.", status_code=404)
+
+        ######DATA PRE-PROCESSING LOGIC FOR PANDAS DATAFRAME CAN BE ADDED HERE########
 
         # Filter past five days data for the given country code
         current_date = datetime.datetime.now()
@@ -52,6 +57,9 @@ def get_rolling_five_days(inputBlob, country_code):
             (df['countryterritoryCode'] == country_code) &
             (df['dateRep'] >= (current_date - datetime.timedelta(days=1000)))
         ]
+
+        if last_five_days_data.empty:
+            return func.HttpResponse(f"No data found for country code {country_code} in the last five days.", status_code=404)
 
         # Extract and structure the relevant data for the response
         response_data = [
@@ -71,8 +79,8 @@ def get_rolling_five_days(inputBlob, country_code):
         reconciliation_record = {
             "startDate": start_date,
             "endDate": end_date,
-            "totalCases": last_five_days_data['cases'].sum(),
-            "totalDeaths": last_five_days_data['deaths'].sum(),
+            "totalCases": int(last_five_days_data['cases'].sum()),
+            "totalDeaths": int(last_five_days_data['deaths'].sum()),
             "totalRecords": len(last_five_days_data),
         }
 
@@ -81,7 +89,7 @@ def get_rolling_five_days(inputBlob, country_code):
             "Source Dataset": "5-Day Covid-19 Report",
             "Source System": "ECDC(European Centre for Disease Prevention and Control)",
             "Last Source Data refresh date": "To be added",
-            "Source Data update frequency": "Weekly",
+            "Source Data update frequency": "Weekly Twice",
             "Source contact": "To be added",
             "House keeping": "More house keeping columns can also be added", 
             "geoId": last_five_days_data.iloc[0]['geoId'],
@@ -101,10 +109,14 @@ def get_rolling_five_days(inputBlob, country_code):
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
     
 
+
 def get_total_data(inputBlob):
     try:
         # Read CSV into a Pandas DataFrame
         df = pd.read_csv(inputBlob)
+
+        if df.empty:
+            return func.HttpResponse("No data found.", status_code=404)
 
         # Group by countryterritoryCode and calculate total cases and deaths
         total_data = df.groupby('countryterritoryCode').agg({
@@ -112,7 +124,9 @@ def get_total_data(inputBlob):
             'deaths': 'sum'
         }).reset_index()
 
-        
+        if total_data.empty:
+            return func.HttpResponse("No total data found.", status_code=404)
+
         # Extract and structure the relevant data for the response
         response_data = [
             {
@@ -135,7 +149,7 @@ def get_total_data(inputBlob):
             "Source Dataset": "Aggregated Covid-19 Report",
             "Source System": "ECDC(European Centre for Disease Prevention and Control)",
             "Last Source Data refresh date": "To be added",
-            "Source Data update frequency": "Weekly",
+            "Source Data update frequency": "Weekly Twice",
             "Source contact": "To be added",
             "House keeping": "More house keeping columns can also be added", 
             "Reconciliation Record": reconciliation_record,
