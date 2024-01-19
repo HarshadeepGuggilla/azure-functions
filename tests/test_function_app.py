@@ -28,6 +28,7 @@ class TestFunctionApp(unittest.TestCase):
             print(f"An error occurred: {e}")
             raise  #raise the exception to see the full traceback
 
+    # Test case for invalid end point scenario
     def test_http_trigger_invalid_end_point(self):
 
         invalidendpoint = HttpRequest(
@@ -45,7 +46,7 @@ class TestFunctionApp(unittest.TestCase):
         assert response.status_code ==  400, "Failure: Status code is not 400"
         print("Success: Status code is 400")
 
-
+    # Test case for empty end point scenario
     def test_http_trigger_empty_end_point(self):
 
         invalidendpoint = HttpRequest(
@@ -63,7 +64,7 @@ class TestFunctionApp(unittest.TestCase):
         assert response.status_code ==  400, "Failure: Status code is not 400"
         print("Success: Status code is 400")
 
-
+    # Test case for rolling five days end point with valid country
     def test_http_trigger_rolling_five_days_valid_endpoint_country(self):
 
         rolling_five_days_valid_cntry = HttpRequest(
@@ -82,6 +83,7 @@ class TestFunctionApp(unittest.TestCase):
         print("Success: Status code is 200")
 
 
+    # Test case for rolling five days end point with invalid country
     def test_http_trigger_rolling_five_days_invalid_country(self):
 
         rolling_five_days_invalid_cntry = HttpRequest(
@@ -98,7 +100,8 @@ class TestFunctionApp(unittest.TestCase):
         response=func_call(rolling_five_days_invalid_cntry, self.input_blob)
         assert response.status_code ==  404, "Failure: Status code is not 404"
         print("Success: Status code is 404")
-    
+
+    # Test case for total-data endpoint by passing country
     def test_http_trigger_total_data_endpoint_cntry(self):
 
         total_data_end_point_with_country = HttpRequest(
@@ -116,7 +119,7 @@ class TestFunctionApp(unittest.TestCase):
         assert response.status_code ==  200, "Failure: Status code is not 200"
         print("Success: Status code is 200")
 
-
+    # Test case for total-data endpoint by not passing country
     def test_http_trigger_total_data_endpoint_nocntry(self):
 
         total_data_end_point_with_country = HttpRequest(
@@ -134,7 +137,7 @@ class TestFunctionApp(unittest.TestCase):
         assert response.status_code ==  200, "Failure: Status code is not 200"
         print("Success: Status code is 200")
 
-    
+    ################MORE TEST CASES CAN BE ADDED#############
 
 
 if __name__ == '__main__':

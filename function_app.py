@@ -1,21 +1,20 @@
-import azure.functions as func
-import logging
-import json
 import csv
+import json
+import logging
 import datetime
 import pandas as pd
+import azure.functions as func
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-
 
 @app.blob_input(arg_name="inputBlob",
                 path="sample-workitems/data.csv",
                 connection="AzureWebJobsStorage")
-@app.route(route="http_trigger/{endpoint}/{countryterritoryCode?}")
+@app.route(route="http_trigger/{endpoint?}/{countryterritoryCode?}")
 def http_trigger(req: func.HttpRequest,  inputBlob: func.InputStream) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
     try:
-        # Extract endpoint and country code from route parameters
+        # Extract endpoint and country territory code from route parameters
         endpoint = req.route_params.get('endpoint')
         country_code = req.route_params.get('countryterritoryCode')
 
@@ -38,24 +37,19 @@ def http_trigger(req: func.HttpRequest,  inputBlob: func.InputStream) -> func.Ht
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
 
     
-
+# Logic for endpoint /rolling-five-days/country_code - returns the past 5 days of data given a country code.
 def get_rolling_five_days(inputBlob, country_code):
     try:
-        # Read CSV into a Pandas DataFrame, parse 'dateRep' column in the correct date format
-        df = pd.read_csv(inputBlob, parse_dates=['dateRep'], dayfirst=True)
-        
-        if df.empty:
-            return func.HttpResponse("No data found.", status_code=404)
+        current_date = datetime.datetime.now()
+        logging.info(f'Started execution for endpoint rolling-five-days and {country_code}'+str(current_date))
 
-        ######DATA PRE-PROCESSING LOGIC FOR PANDAS DATAFRAME CAN BE ADDED HERE########
+        df = read_preprocess_data(inputBlob) # Data Reading and pre-processing step
 
         # Filter past five days data for the given country code
-        current_date = datetime.datetime.now()
-        start_date = (current_date - datetime.timedelta(days=5)).strftime("%d/%m/%Y")
-        end_date = current_date.strftime("%d/%m/%Y")
+        latest_date = df.loc[df['countryterritoryCode'] == country_code, 'dateRep'].max()
         last_five_days_data = df[
             (df['countryterritoryCode'] == country_code) &
-            (df['dateRep'] >= (current_date - datetime.timedelta(days=1000)))
+            (df['dateRep'] >= (latest_date - pd.DateOffset(days=4)))  # Adjusted to consider only the latest five days
         ]
 
         if last_five_days_data.empty:
@@ -65,9 +59,6 @@ def get_rolling_five_days(inputBlob, country_code):
         response_data = [
             {
                 "dateRep": row['dateRep'].strftime("%d/%m/%Y"),  
-                "day": row['day'],
-                "month": row['month'],
-                "year": row['year'],
                 "cases": row['cases'],
                 "deaths": row['deaths']
             }
@@ -76,56 +67,55 @@ def get_rolling_five_days(inputBlob, country_code):
 
 
         # Reconciliation record with start date, end date, total cases, total deaths, and total records
+        start_date = (latest_date - pd.DateOffset(days=4)).strftime("%d/%m/%Y")
+        end_date = latest_date.strftime("%d/%m/%Y")
         reconciliation_record = {
-            "startDate": start_date,
-            "endDate": end_date,
-            "totalCases": int(last_five_days_data['cases'].sum()),
-            "totalDeaths": int(last_five_days_data['deaths'].sum()),
-            "totalRecords": len(last_five_days_data),
+            "Start Date": start_date,
+            "End Date": end_date,
+            "Total Cases": int(last_five_days_data['cases'].sum()),
+            "Total Deaths": int(last_five_days_data['deaths'].sum()),
+            "Total Records": len(last_five_days_data)
         }
 
        # Construct the final response document
         response_document = {
-            "Source Dataset": "5-Day Covid-19 Report",
-            "Source System": "ECDC(European Centre for Disease Prevention and Control)",
-            "Last Source Data refresh date": "To be added",
-            "Source Data update frequency": "Weekly Twice",
-            "Source contact": "To be added",
-            "House keeping": "More house keeping columns can also be added", 
-            "geoId": last_five_days_data.iloc[0]['geoId'],
-            "countryterritoryCode": last_five_days_data.iloc[0]['countryterritoryCode'],
-            "country": last_five_days_data.iloc[0]['countriesAndTerritories'],
-            "continent": last_five_days_data.iloc[0]['continentExp'],
-            "Reconciliation Record": reconciliation_record,
-            "records": response_data
+            "SourceDataset": "5-Day Covid-19 Report",
+            "SourceSystem": "ECDC(European Centre for Disease Prevention and Control)",
+            "SourcePointofContact": "Digital, Data & IT Team",
+            "SourceDataRefreshDate": "To be added",
+            "SourceDataRefreshFrequency": "Weekly Twice",
+            "HouseKeeping": "More house keeping columns can also be added", 
+            "GeoId": last_five_days_data.iloc[0]['geoId'],
+            "CountryTerritoryCode": last_five_days_data.iloc[0]['countryterritoryCode'],
+            "Country": last_five_days_data.iloc[0]['countriesAndTerritories'],
+            "Continent": last_five_days_data.iloc[0]['continentExp'],
+            "ReconciliationRecord": reconciliation_record,
+            "Records": response_data
         }
-
+        logging.info(f'Completed execution for endpoint rolling_five_days and {country_code}'+str(current_date))
         return func.HttpResponse(
             json.dumps(response_document, indent=2),
             mimetype="application/json",
             status_code=200
         )
+            
     except Exception as e:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
     
 
-
+# Logic for total-data end point - returns the total number of cases for each country
 def get_total_data(inputBlob):
     try:
-        # Read CSV into a Pandas DataFrame
-        df = pd.read_csv(inputBlob)
-
-        if df.empty:
-            return func.HttpResponse("No data found.", status_code=404)
+        current_date = datetime.datetime.now()
+        logging.info(f'Started execution for endpoint total-data'+str(current_date))
+        
+        df = read_preprocess_data(inputBlob) # Data Reading and pre-processing step
 
         # Group by countryterritoryCode and calculate total cases and deaths
         total_data = df.groupby('countryterritoryCode').agg({
             'cases': 'sum',
             'deaths': 'sum'
         }).reset_index()
-
-        if total_data.empty:
-            return func.HttpResponse("No total data found.", status_code=404)
 
         # Extract and structure the relevant data for the response
         response_data = [
@@ -139,23 +129,23 @@ def get_total_data(inputBlob):
 
         # Reconciliation record for total data
         reconciliation_record = {
-            "totalCases": total_data['cases'].sum(),
-            "totalDeaths": total_data['deaths'].sum(),
-            "totalRecords": len(total_data),
+            "Total Cases": total_data['cases'].sum(),
+            "Total Deaths": total_data['deaths'].sum(),
+            "Total Records": len(total_data),
         }
         
         # Construct the final response document
         response_document = {
-            "Source Dataset": "Aggregated Covid-19 Report",
-            "Source System": "ECDC(European Centre for Disease Prevention and Control)",
-            "Last Source Data refresh date": "To be added",
-            "Source Data update frequency": "Weekly Twice",
-            "Source contact": "To be added",
-            "House keeping": "More house keeping columns can also be added", 
-            "Reconciliation Record": reconciliation_record,
-            "records": response_data
+            "SourceDataset": "Aggregated Covid-19 Report",
+            "SourceSystem": "ECDC(European Centre for Disease Prevention and Control)",
+            "SourcePointofContact": "Digital, Data & IT Team",
+            "SourceDataRefreshDate": "To be added",
+            "SourceDataRefreshFrequency": "Weekly Twice",
+            "HouseKeeping": "More house keeping columns can also be added", 
+            "ReconciliationRecord": reconciliation_record,
+            "Records": response_data
         }
-
+        logging.info(f'Completed execution for endpoint total_data'+str(current_date))
         return func.HttpResponse(
             json.dumps(response_document, indent=2),
             mimetype="application/json",
@@ -163,3 +153,27 @@ def get_total_data(inputBlob):
         )
     except Exception as e:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
+
+# Data Pre-processing and cleaning up
+def read_preprocess_data(inputBlob):
+
+    # Read CSV to pandas dataframe
+    df = pd.read_csv(inputBlob, parse_dates=['dateRep'], dayfirst=True)
+
+    if df.empty:
+            return func.HttpResponse("No data found.", status_code=404)
+    
+    # Fill 0 in cases and deaths columns for rows with blanks
+    df['cases'].fillna(0, inplace=True)
+    df['deaths'].fillna(0, inplace=True)
+    
+    # Remove rows with negative numbers in cases or deaths columns
+    df = df[(df['cases'] >= 0) & (df['deaths'] >= 0)]
+
+    # Convert dateRep column to datetime format
+    df['dateRep'] = pd.to_datetime(df['dateRep'], format='%d/%m/%Y', errors='coerce')
+
+    # Drop duplicate records if any
+    df.drop_duplicates(inplace=True)
+
+    return df
