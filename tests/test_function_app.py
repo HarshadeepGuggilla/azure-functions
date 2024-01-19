@@ -44,7 +44,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(invalidendpoint, self.input_blob)
         assert response.status_code ==  400, "Failure: Status code is not 400"
-        print("Success: Status code is 400")
+        print("Test case for invalid end point scenario -- Success: Status code is 400")
 
     # Test case for empty end point scenario
     def test_http_trigger_empty_end_point(self):
@@ -62,7 +62,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(invalidendpoint, self.input_blob)
         assert response.status_code ==  400, "Failure: Status code is not 400"
-        print("Success: Status code is 400")
+        print("Test case for empty end point scenario -- Success: Status code is 400")
 
     # Test case for rolling five days end point with valid country
     def test_http_trigger_rolling_five_days_valid_endpoint_country(self):
@@ -80,7 +80,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(rolling_five_days_valid_cntry, self.input_blob)
         assert response.status_code ==  200, "Failure: Status code is not 200"
-        print("Success: Status code is 200")
+        print("Test case for rolling five days end point with valid country -- Success: Status code is 200")
 
 
     # Test case for rolling five days end point with invalid country
@@ -99,7 +99,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(rolling_five_days_invalid_cntry, self.input_blob)
         assert response.status_code ==  404, "Failure: Status code is not 404"
-        print("Success: Status code is 404")
+        print("Test case for rolling five days end point with invalid country -- Success: Status code is 404")
 
     # Test case for total-data endpoint by passing country
     def test_http_trigger_total_data_endpoint_cntry(self):
@@ -117,7 +117,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(total_data_end_point_with_country, self.input_blob)
         assert response.status_code ==  200, "Failure: Status code is not 200"
-        print("Success: Status code is 200")
+        print("Test case for total-data endpoint by passing country -- Success: Status code is 200")
 
     # Test case for total-data endpoint by not passing country
     def test_http_trigger_total_data_endpoint_nocntry(self):
@@ -135,7 +135,7 @@ class TestFunctionApp(unittest.TestCase):
         func_call = http_trigger.build().get_user_function()
         response=func_call(total_data_end_point_with_country, self.input_blob)
         assert response.status_code ==  200, "Failure: Status code is not 200"
-        print("Success: Status code is 200")
+        print("Test case for total-data endpoint by not passing country -- Success: Status code is 200")
 
     ################MORE TEST CASES CAN BE ADDED#############
 
