@@ -47,7 +47,7 @@ jobs:
 
           echo "----PYTHONPATH------"
           PWD=$(pwd)
-          export PYTHONPATH=$PWD/:$PWD/tests$PYTHONPATH
+          export PYTHONPATH=$PWD/:$PWD/tests/
           echo "PYTHONPATH=$PYTHONPATH" 
           python -m unittest discover -v test_function_app
 
