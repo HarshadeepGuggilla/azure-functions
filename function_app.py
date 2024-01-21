@@ -37,6 +37,7 @@ def http_trigger(req: func.HttpRequest,  inputBlob: func.InputStream) -> func.Ht
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
 
     
+
 # Logic for endpoint /rolling-five-days/country_code - returns the past 5 days of data given a country code.
 def get_rolling_five_days(inputBlob, country_code):
     try:
@@ -101,6 +102,7 @@ def get_rolling_five_days(inputBlob, country_code):
             
     except Exception as e:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
+    
     
 
 # Logic for total-data end point - returns the total number of cases for each country
