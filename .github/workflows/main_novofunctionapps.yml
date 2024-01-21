@@ -20,19 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Set PYTHONPATH
-        run: |
-          echo "-----pwd-----"
-          pwd
-
-          echo "-----ls-----"
-          ls
-
-          echo "----PYTHONPATH------"
-          PWD=$(pwd)
-          export PYTHONPATH=$PWD/:$PWD/tests$PYTHONPATH
-          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
 
       - name: Setup Python version
         uses: actions/setup-python@v1
@@ -61,7 +48,7 @@ jobs:
           echo "----PYTHONPATH------"
           PWD=$(pwd)
           export PYTHONPATH=$PWD/:$PWD/tests$PYTHONPATH
-          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
+          echo "PYTHONPATH=$PYTHONPATH" 
           python -m unittest discover -v test_function_app
 
       - name: Zip artifact for deployment
