@@ -31,7 +31,7 @@ jobs:
 
           echo "----PYTHONPATH------"
           PWD=$(pwd)
-          export PYTHONPATH=$PWD/src:$PWD/tests:$PYTHONPATH
+          export PYTHONPATH=$PWD/:$PWD/tests:$PYTHONPATH
           echo "PYTHONPATH=$PYTHONPATH"
 
       - name: Setup Python version
