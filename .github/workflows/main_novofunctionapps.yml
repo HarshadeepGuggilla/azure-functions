@@ -47,10 +47,9 @@ jobs:
 
           echo "----PYTHONPATH------"
           PWD=$(pwd)
-          export PYTHONPATH=$PWD/:$PWD/tests/
-          echo "PYTHONPATH=$PYTHONPATH" 
-          echo "::set-env name=PYTHONPATH::home/runner/work/azure"
-          python -m unittest discover -v test_function_app
+          export PYTHONPATH=$PWD/:$PWD/tests
+          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
+          python -m unittest discover -v tests
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
