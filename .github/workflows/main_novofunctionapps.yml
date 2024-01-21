@@ -49,6 +49,7 @@ jobs:
           PWD=$(pwd)
           export PYTHONPATH=$PWD/:$PWD/tests/
           echo "PYTHONPATH=$PYTHONPATH" 
+          echo "::set-env name=PYTHONPATH::home/runner/work/azure"
           python -m unittest discover -v test_function_app
 
       - name: Zip artifact for deployment
