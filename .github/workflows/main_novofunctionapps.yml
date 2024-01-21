@@ -32,7 +32,7 @@ jobs:
           echo "----PYTHONPATH------"
           PWD=$(pwd)
           export PYTHONPATH=$PWD/:$PWD/tests$PYTHONPATH
-          echo "PYTHONPATH=$PYTHONPATH"
+          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
 
       - name: Setup Python version
         uses: actions/setup-python@v1
