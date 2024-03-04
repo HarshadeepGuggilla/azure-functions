@@ -16,6 +16,8 @@ up with a suitable return model for the data).
 
 
 Consider a strategy for testing the API --- python unittest framework is used.
+
+
 Consider a storing solution for the dataset --- Idea is store in blob/ADLS but now storing in local storage emulator for demo purpose.
 
 
