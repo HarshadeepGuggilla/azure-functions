@@ -22,3 +22,9 @@ Consider a storing solution for the dataset --- Idea is store in blob/ADLS but n
 
 
 *****************THIS IS ONE OF THE MANY POSSIBLE SOLUTIONS, SAME THING CAN BE ACHIEVED USING DIFFERENT SET OF TOOLS AS WELL*****************
+
+
+
+
+![image](https://github.com/HarshadeepGuggilla/azure-functions/assets/156913742/8f157ed5-bfa5-4c71-b45b-6cafa4492d05)
+
